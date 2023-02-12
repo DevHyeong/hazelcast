@@ -1,12 +1,10 @@
 package com.example.hazelcast.service;
 
 import com.example.hazelcast.topic.message.TopicEvent;
-import com.hazelcast.cluster.Address;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IExecutorService;
 import com.hazelcast.map.IMap;
-import com.hazelcast.version.MemberVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,12 +23,12 @@ public class HazelcastService {
 
    private final HazelcastInstance hazelcastInstance;
 
-    protected Member findClusterMember(String region) {
+    protected Member findClusterMember(String userId) {
         Set<Member> clusterMember = hazelcastInstance.getCluster().getMembers();
 
         for(Member m : clusterMember){
 
-            if(false){
+            if(m.getAttributes().containsKey("") && userId.equals(m.getAttributes().get(""))){
                 return m;
             }
         }
@@ -38,7 +36,23 @@ public class HazelcastService {
        // throw new IllegalAccessException(region + "is not clustered region. ");
     }
 
-    public <T> T submitToRegion(String executorName, Callable<T> task, String region){
+    public <T> List<T> submitToAllUsers(String executorName, Callable<T> task){
+        List<T> results = new ArrayList<>();
+        IExecutorService executorService = hazelcastInstance.getExecutorService(executorName);
+        Map<Member,Future<T>> futures = executorService.submitToAllMembers(task);
+        for (Future<T> future : futures.values()){
+            try {
+                T result = future.get();
+                results.add(result);
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Error while inquire region info. {}", e.getMessage());
+            }
+        }
+        return results;
+    }
+
+
+    public <T> T submitToUser(String executorName, Callable<T> task, String region){
         Member member = findClusterMember(region);
         IExecutorService executorService = hazelcastInstance.getExecutorService(executorName);
         Future<T> future = executorService.submitToMember(task, member);
