@@ -25,12 +25,17 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation (group: "org.springframework.boot", name: "spring-boot-starter-data-jpa")
 	implementation (group: "com.hazelcast", name: "hazelcast", version: hazelcast_version)
 	implementation (group: "com.hazelcast", name: "hazelcast-spring", version: hazelcast_version)
+	implementation (group: "com.h2database", name: "h2", version: "1.4.197")
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation (group: "org.mockito", name: "mockito-core", version: "2.24.0")
+	testImplementation (group: "junit", name: "junit", version: "4.13.1")
+
 }
 
 tasks.named('test') {
